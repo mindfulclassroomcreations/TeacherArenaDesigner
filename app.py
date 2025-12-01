@@ -121,12 +121,19 @@ def handle_generation(generator_func, request):
     
     file = request.files['file']
     
-    # Fetch API Key from DB
+    # Fetch API Key from DB or environment variable
     api_key_config = Config.query.filter_by(key_name='openai_api_key').first()
-    if not api_key_config or not api_key_config.value:
-        return jsonify({'error': 'OpenAI API Key not set by Admin. Please login and set the API key in the admin dashboard.'}), 400
+    api_key = None
     
-    api_key = api_key_config.value
+    # Try database first, then environment variable
+    if api_key_config and api_key_config.value:
+        api_key = api_key_config.value
+    else:
+        api_key = os.environ.get('OPENAI_API_KEY')
+    
+    if not api_key:
+        return jsonify({'error': 'OpenAI API Key not set. Please set it in admin dashboard or as environment variable.'}), 400
+    
     print(f"[DEBUG] Using API key: {api_key[:10]}...")  # Log first 10 chars for debugging
     
     if file.filename == '':
