@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: teacher-arena-designer
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: PYTHON_VERSION
+        value: 3.11.6
+    plan: free
