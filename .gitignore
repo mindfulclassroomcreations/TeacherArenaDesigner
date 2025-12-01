@@ -26,6 +26,7 @@ Thumbs.db
 # Uploads
 uploads/
 temp/
+downloads/
 
 # Logs
 *.log

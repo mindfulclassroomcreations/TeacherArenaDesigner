@@ -14,7 +14,12 @@ from flask_bcrypt import Bcrypt
 from models import db, User, Config
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = tempfile.gettempdir()
+
+# Create a persistent folder for downloads
+DOWNLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'downloads')
+os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
+
+app.config['UPLOAD_FOLDER'] = DOWNLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-change-this')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///database.db').replace('postgres://', 'postgresql://', 1)
@@ -203,7 +208,18 @@ def generate_caterpillar():
 
 @app.route('/download/<filename>')
 def download_file(filename):
-    return send_file(os.path.join(app.config['UPLOAD_FOLDER'], filename), as_attachment=True)
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    if not os.path.exists(file_path):
+        return jsonify({'error': 'File not found. It may have been cleaned up.'}), 404
+    
+    try:
+        response = send_file(file_path, as_attachment=True)
+        # Clean up file after sending (optional - comment out if you want files to persist)
+        # os.remove(file_path)
+        return response
+    except Exception as e:
+        print(f"[ERROR] Download failed: {str(e)}")
+        return jsonify({'error': 'Download failed'}), 500
 
 @app.route('/health')
 def health_check():
