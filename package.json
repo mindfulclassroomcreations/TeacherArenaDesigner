@@ -1,0 +1,7 @@
+{
+  "name": "worksheets-task-cards",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "source .venv/bin/activate && python app.py"
+  }
+}

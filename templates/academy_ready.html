@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academy Ready | Worksheet Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <a href="/" class="back-nav"><i class="fa-solid fa-arrow-left"></i> Back to Hub</a>
+    <div class="background-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <main class="container">
+        <div class="glass-card">
+            <header>
+                <div class="logo">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                    <h1>Academy Ready</h1>
+                </div>
+                <p class="subtitle">AI-Powered Worksheet Generator</p>
+            </header>
+
+            <form id="upload-form" action="/generate-academy" method="post" enctype="multipart/form-data">
+
+
+                <div class="form-group">
+                    <label>Curriculum File (Excel)</label>
+                    <div class="file-upload-area" id="drop-zone">
+                        <input type="file" id="file" name="file" accept=".xlsx" required hidden>
+                        <div class="upload-content">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                            <p>Drag & drop your <strong>details.xlsx</strong> here</p>
+                            <span>or click to browse</span>
+                        </div>
+                        <div class="file-info" id="file-info" style="display: none;">
+                            <i class="fa-solid fa-file-excel"></i>
+                            <span id="filename">filename.xlsx</span>
+                            <button type="button" id="remove-file"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" id="generate-btn" class="cta-button">
+                    <span>Generate Worksheets</span>
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </button>
+            </form>
+
+            <div id="status-area" class="status-area" style="display: none;">
+                <div class="loader"></div>
+                <p id="status-text">Generating worksheets...</p>
+                <div id="individual-downloads" class="individual-downloads">
+                    <!-- Individual download buttons will appear here -->
+                </div>
+                <p class="sub-status">This may take a few minutes. Please do not close this tab.</p>
+            </div>
+
+            <div id="result-area" class="result-area" style="display: none;">
+                <div class="success-icon">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <h3>Generation Complete!</h3>
+                <p>Your worksheets are ready for download.</p>
+                <a href="#" id="download-link" class="download-button">
+                    <i class="fa-solid fa-download"></i> Download ZIP
+                </a>
+                <button id="reset-btn" class="text-button">Generate Another</button>
+            </div>
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+
+</html>

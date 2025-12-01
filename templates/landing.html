@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worksheet Generators | Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .landing-container {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 900px;
+            width: 100%;
+            padding: 20px;
+            z-index: 1;
+        }
+
+        .app-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 40px;
+            width: 350px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .app-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border-color: var(--primary);
+        }
+
+        .app-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .app-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-light);
+            margin-bottom: 10px;
+        }
+
+        .app-desc {
+            color: var(--text-dim);
+            font-size: 14px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .app-btn {
+            margin-top: auto;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-light);
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .app-card:hover .app-btn {
+            background: var(--primary);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="background-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <div class="landing-container">
+        <a href="/academy-ready" class="app-card">
+            <i class="fa-solid fa-graduation-cap app-icon"></i>
+            <h2 class="app-title">Academy Ready</h2>
+            <p class="app-desc">Generate comprehensive worksheets, task cards, and assessments aligned with your
+                curriculum.</p>
+            <span class="app-btn">Launch App <i class="fa-solid fa-arrow-right"></i></span>
+        </a>
+
+        <a href="/dreaming-caterpillar" class="app-card">
+            <i class="fa-solid fa-leaf app-icon"
+                style="background: linear-gradient(135deg, #10b981, #3b82f6); -webkit-background-clip: text;"></i>
+            <h2 class="app-title">The Dreaming Caterpillar</h2>
+            <p class="app-desc">Create engaging science worksheets with True/False, Scenarios, and Open-Ended questions.
+            </p>
+            <span class="app-btn" style="background: rgba(16, 185, 129, 0.2);">Launch App <i
+                    class="fa-solid fa-arrow-right"></i></span>
+        </a>
+    </div>
+
+    <div style="text-align: center; margin-top: 20px; z-index: 10;">
+        <a href="/login"
+            style="color: var(--text-dim); text-decoration: none; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <i class="fa-solid fa-lock"></i> Admin Login
+        </a>
+    </div>
+</body>
+
+</html>

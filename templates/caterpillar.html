@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Dreaming Caterpillar | Worksheet Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* Specific overrides for Caterpillar theme */
+        :root {
+            --primary: #10b981;
+            /* Emerald Green */
+            --primary-dark: #059669;
+            --secondary: #3b82f6;
+            /* Blue */
+        }
+
+        .shape-1 {
+            background: var(--primary);
+        }
+
+        .shape-2 {
+            background: var(--secondary);
+        }
+
+        .back-nav {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.3s ease;
+            z-index: 10;
+        }
+
+        .back-nav:hover {
+            color: var(--text-light);
+        }
+    </style>
+</head>
+
+<body>
+    <a href="/" class="back-nav"><i class="fa-solid fa-arrow-left"></i> Back to Hub</a>
+
+    <div class="background-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <div class="container">
+        <div class="glass-card">
+            <header>
+                <div class="logo">
+                    <i class="fa-solid fa-leaf"></i>
+                    <h1>The Dreaming Caterpillar</h1>
+                </div>
+                <p class="subtitle">Science Worksheet Generator</p>
+            </header>
+
+            <form id="upload-form" action="/generate-caterpillar" method="post" enctype="multipart/form-data">
+
+
+                <div class="form-group">
+                    <label>Upload Curriculum File (.xlsx)</label>
+                    <div class="file-upload-area" id="drop-zone">
+                        <input type="file" id="file" name="file" accept=".xlsx" hidden>
+                        <div class="upload-content">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                            <p>Click or Drag & Drop</p>
+                            <span>Excel files only</span>
+                        </div>
+                        <div class="file-info" id="file-info" style="display: none;">
+                            <i class="fa-solid fa-file-excel"></i>
+                            <span id="filename">filename.xlsx</span>
+                            <button type="button" id="remove-file"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="cta-button" id="generate-btn">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Worksheets
+                </button>
+            </form>
+
+            <div id="status-area" class="status-area" style="display: none;">
+                <div class="loader"></div>
+                <p id="status-text">Generating worksheets...</p>
+                <div id="individual-downloads" class="individual-downloads">
+                    <!-- Individual download buttons will appear here -->
+                </div>
+                <p class="sub-status">This may take a few minutes. Please do not close this tab.</p>
+            </div>
+
+            <div id="result-area" class="result-area" style="display: none;">
+                <div class="success-icon">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <h3>Generation Complete!</h3>
+                <p>Your worksheets are ready for download.</p>
+                <a href="#" id="download-link" class="download-button">
+                    <i class="fa-solid fa-download"></i> Download All (.zip)
+                </a>
+                <button id="reset-btn" class="text-button">Generate More</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // Override the form action in main.js logic if needed, or rely on the HTML attribute
+        // Since main.js uses fetch('/generate'), we might need to update main.js to read the action from the form.
+        // I will update main.js next to be generic.
+    </script>
+</body>
+
+</html>

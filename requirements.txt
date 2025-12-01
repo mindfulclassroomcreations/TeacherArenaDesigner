@@ -1,0 +1,15 @@
+flask
+pandas
+reportlab
+openai
+backoff
+pypdf
+werkzeug
+gunicorn
+pymupdf
+pdf2image
+Flask-SQLAlchemy
+Flask-Login
+Flask-Bcrypt
+psycopg2-binary
+openpyxl
