@@ -349,16 +349,27 @@ def health_check():
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
-# Initialize database tables
-with app.app_context():
-    db.create_all()
-    # Create default admin if not exists
-    if not User.query.filter_by(username='admin').first():
-        hashed_pw = bcrypt.generate_password_hash('admin123').decode('utf-8')
-        admin = User(username='admin', password_hash=hashed_pw, is_admin=True)
-        db.session.add(admin)
-        db.session.commit()
-        print("Default admin created: admin / admin123")
+# Initialize database tables (safe for multiple workers)
+def init_db():
+    """Initialize database tables and create default admin if needed"""
+    try:
+        with app.app_context():
+            # Use create_all with checkfirst (default behavior, but being explicit)
+            db.create_all()
+            # Create default admin if not exists
+            if not User.query.filter_by(username='admin').first():
+                hashed_pw = bcrypt.generate_password_hash('admin123').decode('utf-8')
+                admin = User(username='admin', password_hash=hashed_pw, is_admin=True)
+                db.session.add(admin)
+                db.session.commit()
+                print("Default admin created: admin / admin123")
+    except Exception as e:
+        # Log error but don't crash if tables already exist
+        print(f"Database initialization: {e}")
+
+# Only initialize DB if running as main app (not in Celery worker context)
+if os.environ.get('CELERY_WORKER') != 'true':
+    init_db()
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
