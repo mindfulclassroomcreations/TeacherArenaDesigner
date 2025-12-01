@@ -124,9 +124,10 @@ def handle_generation(generator_func, request):
     # Fetch API Key from DB
     api_key_config = Config.query.filter_by(key_name='openai_api_key').first()
     if not api_key_config or not api_key_config.value:
-        return jsonify({'error': 'OpenAI API Key not set by Admin.'}), 400
+        return jsonify({'error': 'OpenAI API Key not set by Admin. Please login and set the API key in the admin dashboard.'}), 400
     
     api_key = api_key_config.value
+    print(f"[DEBUG] Using API key: {api_key[:10]}...")  # Log first 10 chars for debugging
     
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
@@ -142,8 +143,10 @@ def handle_generation(generator_func, request):
 
         def generate_stream():
             try:
+                print(f"[DEBUG] Starting generation for file: {upload_path}")
                 # Run generation
                 for update in generator_func(upload_path, output_dir, api_key):
+                    print(f"[DEBUG] Update: {update.get('type')} - {update.get('message', update.get('topic', ''))}")
                     if update['type'] == 'progress':
                         yield f"data: {json.dumps(update)}\n\n"
                     
