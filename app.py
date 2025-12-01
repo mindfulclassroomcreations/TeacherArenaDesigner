@@ -12,6 +12,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_bcrypt import Bcrypt
 from models import db, User, Config
+from celery_config import make_celery
 
 app = Flask(__name__)
 
@@ -28,6 +29,9 @@ db.init_app(app)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+
+# Initialize Celery
+celery = make_celery(app)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -205,6 +209,112 @@ def generate_academy():
 @app.route('/generate-caterpillar', methods=['POST'])
 def generate_caterpillar():
     return handle_generation(generate_caterpillar_worksheets, request)
+
+# --- Async Generation Routes ---
+@app.route('/generate-academy-async', methods=['POST'])
+def generate_academy_async():
+    """Start background task for academy worksheet generation"""
+    from tasks import generate_worksheets_task
+    
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    
+    file = request.files['file']
+    
+    # Get API key
+    api_key_config = Config.query.filter_by(key_name='openai_api_key').first()
+    api_key = api_key_config.value if api_key_config and api_key_config.value else os.environ.get('OPENAI_API_KEY')
+    
+    if not api_key:
+        return jsonify({'error': 'OpenAI API Key not set'}), 400
+    
+    if file.filename == '' or not file.filename.endswith('.xlsx'):
+        return jsonify({'error': 'Invalid file'}), 400
+    
+    # Save uploaded file temporarily
+    temp_path = os.path.join(app.config['UPLOAD_FOLDER'], f"upload_{secure_filename(file.filename)}")
+    file.save(temp_path)
+    
+    # Start background task
+    task = generate_worksheets_task.apply_async(args=[temp_path, 'academy', api_key])
+    
+    return jsonify({
+        'task_id': task.id,
+        'status': 'started',
+        'status_url': f'/task-status/{task.id}'
+    }), 202
+
+@app.route('/generate-caterpillar-async', methods=['POST'])
+def generate_caterpillar_async():
+    """Start background task for caterpillar worksheet generation"""
+    from tasks import generate_worksheets_task
+    
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    
+    file = request.files['file']
+    
+    # Get API key
+    api_key_config = Config.query.filter_by(key_name='openai_api_key').first()
+    api_key = api_key_config.value if api_key_config and api_key_config.value else os.environ.get('OPENAI_API_KEY')
+    
+    if not api_key:
+        return jsonify({'error': 'OpenAI API Key not set'}), 400
+    
+    if file.filename == '' or not file.filename.endswith('.xlsx'):
+        return jsonify({'error': 'Invalid file'}), 400
+    
+    # Save uploaded file temporarily
+    temp_path = os.path.join(app.config['UPLOAD_FOLDER'], f"upload_{secure_filename(file.filename)}")
+    file.save(temp_path)
+    
+    # Start background task
+    task = generate_worksheets_task.apply_async(args=[temp_path, 'caterpillar', api_key])
+    
+    return jsonify({
+        'task_id': task.id,
+        'status': 'started',
+        'status_url': f'/task-status/{task.id}'
+    }), 202
+
+@app.route('/task-status/<task_id>')
+def task_status(task_id):
+    """Check status of background task"""
+    from tasks import generate_worksheets_task
+    
+    task = generate_worksheets_task.AsyncResult(task_id)
+    
+    if task.state == 'PENDING':
+        response = {
+            'state': task.state,
+            'status': 'Task is waiting to start...',
+            'current': 0,
+            'total': 100
+        }
+    elif task.state == 'PROGRESS':
+        response = {
+            'state': task.state,
+            'status': task.info.get('status', ''),
+            'current': task.info.get('current', 0),
+            'total': task.info.get('total', 100),
+            'individual_files': task.info.get('individual_files', [])
+        }
+    elif task.state == 'SUCCESS':
+        response = {
+            'state': task.state,
+            'status': 'Generation complete!',
+            'current': 100,
+            'total': 100,
+            'result': task.info
+        }
+    else:  # FAILURE or other states
+        response = {
+            'state': task.state,
+            'status': str(task.info) if task.info else 'Task failed',
+            'error': str(task.info) if task.state == 'FAILURE' else None
+        }
+    
+    return jsonify(response)
 
 @app.route('/download/<filename>')
 def download_file(filename):

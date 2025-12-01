@@ -13,3 +13,6 @@ Flask-Login
 Flask-Bcrypt
 psycopg2-binary
 openpyxl
+celery
+redis
+flower

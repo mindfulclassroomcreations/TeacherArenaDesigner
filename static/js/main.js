@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('.upload-content').style.display = 'block';
     });
 
-    // Form Submission
+    // Form Submission - Async with polling
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -88,8 +88,6 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Please select a file first.');
             return;
         }
-
-
 
         // UI State: Loading
         form.style.display = 'none';
@@ -99,60 +97,88 @@ document.addEventListener('DOMContentLoaded', () => {
         individualDownloads.innerHTML = ''; // Clear previous results
 
         const formData = new FormData(form);
+        
+        // Determine which endpoint to use based on form action
+        const isAcademy = form.action.includes('academy');
+        const asyncEndpoint = isAcademy ? '/generate-academy-async' : '/generate-caterpillar-async';
 
         try {
-            const response = await fetch(form.action, {
+            // Start the background task
+            statusText.textContent = 'Starting generation...';
+            const response = await fetch(asyncEndpoint, {
                 method: 'POST',
                 body: formData
             });
 
             if (!response.ok) {
                 const data = await response.json();
-                throw new Error(data.error || 'An unknown error occurred.');
+                throw new Error(data.error || 'Failed to start generation');
             }
 
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let buffer = '';
+            const { task_id, status_url } = await response.json();
+            statusText.textContent = 'Generation in progress...';
 
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
+            // Poll for progress
+            const pollInterval = setInterval(async () => {
+                try {
+                    const statusResponse = await fetch(status_url);
+                    const status = await statusResponse.json();
 
-                buffer += decoder.decode(value, { stream: true });
-                const lines = buffer.split('\n\n');
-                buffer = lines.pop(); // Keep the last incomplete chunk
+                    if (status.state === 'PENDING') {
+                        statusText.textContent = 'Waiting to start...';
+                    } else if (status.state === 'PROGRESS') {
+                        const percent = status.total > 0 ? Math.round((status.current / status.total) * 100) : 0;
+                        statusText.textContent = `${status.status} (${percent}%)`;
 
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        const jsonStr = line.slice(6);
-                        try {
-                            const data = JSON.parse(jsonStr);
-
-                            if (data.type === 'progress') {
-                                statusText.textContent = data.message;
-                            } else if (data.type === 'result') {
+                        // Update individual downloads
+                        if (status.individual_files && status.individual_files.length > 0) {
+                            individualDownloads.innerHTML = ''; // Clear and rebuild
+                            status.individual_files.forEach(file => {
                                 const btn = document.createElement('a');
-                                btn.href = data.download_url;
+                                btn.href = file.download_url;
                                 btn.className = 'download-btn individual-btn';
-                                btn.innerHTML = `<i class="fa-solid fa-download"></i> ${data.topic}`;
+                                btn.innerHTML = `<i class="fa-solid fa-download"></i> ${file.topic}`;
                                 btn.style.display = 'block';
                                 btn.style.marginBottom = '10px';
                                 individualDownloads.appendChild(btn);
-                                statusText.textContent = `Completed: ${data.topic} (${data.progress})`;
-                            } else if (data.type === 'complete') {
-                                statusArea.style.display = 'none';
-                                resultArea.style.display = 'block';
-                                downloadLink.href = data.download_url;
-                            } else if (data.type === 'error') {
-                                throw new Error(data.message);
-                            }
-                        } catch (e) {
-                            console.error('Error parsing SSE data:', e);
+                            });
                         }
+                    } else if (status.state === 'SUCCESS') {
+                        clearInterval(pollInterval);
+                        statusText.textContent = 'Generation complete!';
+
+                        // Show final results
+                        statusArea.style.display = 'none';
+                        resultArea.style.display = 'block';
+                        
+                        if (status.result && status.result.download_url) {
+                            downloadLink.href = status.result.download_url;
+                        }
+
+                        // Show all individual files
+                        if (status.result && status.result.individual_files) {
+                            individualDownloads.innerHTML = '';
+                            status.result.individual_files.forEach(file => {
+                                const btn = document.createElement('a');
+                                btn.href = file.download_url;
+                                btn.className = 'download-btn individual-btn';
+                                btn.innerHTML = `<i class="fa-solid fa-download"></i> ${file.topic}`;
+                                btn.style.display = 'block';
+                                btn.style.marginBottom = '10px';
+                                individualDownloads.appendChild(btn);
+                            });
+                        }
+                    } else if (status.state === 'FAILURE') {
+                        clearInterval(pollInterval);
+                        throw new Error(status.error || 'Task failed');
                     }
+                } catch (pollError) {
+                    clearInterval(pollInterval);
+                    statusArea.style.display = 'none';
+                    form.style.display = 'block';
+                    alert(`Error: ${pollError.message}`);
                 }
-            }
+            }, 2000); // Poll every 2 seconds
 
         } catch (error) {
             statusArea.style.display = 'none';
