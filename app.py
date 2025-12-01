@@ -176,8 +176,9 @@ def handle_generation(generator_func, request):
                 shutil.rmtree(session_dir)
 
             except Exception as e:
+                print(f"[ERROR] Generation failed: {str(e)}")
                 traceback.print_exc()
-                error_msg = {'type': 'error', 'message': str(e)}
+                error_msg = {'type': 'error', 'message': f"Generation failed: {str(e)}"}
                 yield f"data: {json.dumps(error_msg)}\n\n"
 
         return Response(stream_with_context(generate_stream()), mimetype='text/event-stream')
@@ -196,6 +197,24 @@ def generate_caterpillar():
 @app.route('/download/<filename>')
 def download_file(filename):
     return send_file(os.path.join(app.config['UPLOAD_FOLDER'], filename), as_attachment=True)
+
+@app.route('/health')
+def health_check():
+    """Health check endpoint to verify API key and system status"""
+    try:
+        api_key_config = Config.query.filter_by(key_name='openai_api_key').first()
+        has_key = bool(api_key_config and api_key_config.value)
+        
+        import sys
+        return jsonify({
+            'status': 'ok',
+            'api_key_set': has_key,
+            'python_version': sys.version,
+            'temp_dir': app.config['UPLOAD_FOLDER'],
+            'fonts_available': os.path.exists('DejaVuSans.ttf')
+        })
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 # Initialize database tables
 with app.app_context():
