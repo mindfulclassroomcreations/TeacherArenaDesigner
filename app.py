@@ -194,15 +194,16 @@ def generate_caterpillar():
 def download_file(filename):
     return send_file(os.path.join(app.config['UPLOAD_FOLDER'], filename), as_attachment=True)
 
+# Initialize database tables
+with app.app_context():
+    db.create_all()
+    # Create default admin if not exists
+    if not User.query.filter_by(username='admin').first():
+        hashed_pw = bcrypt.generate_password_hash('admin123').decode('utf-8')
+        admin = User(username='admin', password_hash=hashed_pw, is_admin=True)
+        db.session.add(admin)
+        db.session.commit()
+        print("Default admin created: admin / admin123")
+
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        # Create default admin if not exists
-        if not User.query.filter_by(username='admin').first():
-            hashed_pw = bcrypt.generate_password_hash('admin123').decode('utf-8')
-            admin = User(username='admin', password_hash=hashed_pw, is_admin=True)
-            db.session.add(admin)
-            db.session.commit()
-            print("Default admin created: admin / admin123")
-            
     app.run(debug=True, port=5000)
