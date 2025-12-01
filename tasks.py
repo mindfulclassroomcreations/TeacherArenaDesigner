@@ -5,15 +5,11 @@ import zipfile
 from werkzeug.utils import secure_filename
 from worksheet_generator import generate_worksheets
 from caterpillar_generator import generate_caterpillar_worksheets
-from celery_config import make_celery
-from flask import Flask
+from celery_app import celery_app
 
-# Create a minimal Flask app for Celery context
-app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(__file__), 'downloads')
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-
-celery = make_celery(app)
+# Download folder configuration
+DOWNLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'downloads')
+os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
 def zip_directory(folder_path, zip_path):
     """Helper to zip a directory"""
@@ -24,7 +20,7 @@ def zip_directory(folder_path, zip_path):
                 arcname = os.path.relpath(file_path, folder_path)
                 zipf.write(file_path, arcname)
 
-@celery.task(bind=True)
+@celery_app.task(bind=True)
 def generate_worksheets_task(self, file_path, generator_type, api_key):
     """
     Background task to generate worksheets
@@ -83,7 +79,7 @@ def generate_worksheets_task(self, file_path, generator_type, api_key):
                 topic_name = update['topic']
                 safe_topic_name = secure_filename(topic_name)
                 zip_filename = f"{safe_topic_name}_{self.request.id}.zip"
-                zip_path = os.path.join(app.config['UPLOAD_FOLDER'], zip_filename)
+                zip_path = os.path.join(DOWNLOAD_FOLDER, zip_filename)
                 zip_directory(topic_path, zip_path)
                 
                 completed_topics += 1
@@ -113,7 +109,7 @@ def generate_worksheets_task(self, file_path, generator_type, api_key):
                 # Zip full output
                 full_output_path = update['path']
                 zip_filename = f"all_worksheets_{self.request.id}.zip"
-                zip_path = os.path.join(app.config['UPLOAD_FOLDER'], zip_filename)
+                zip_path = os.path.join(DOWNLOAD_FOLDER, zip_filename)
                 zip_directory(full_output_path, zip_path)
                 
                 # Clean up session directory

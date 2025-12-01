@@ -12,7 +12,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_bcrypt import Bcrypt
 from models import db, User, Config
-from celery_config import make_celery
+from celery_app import make_celery
 
 app = Flask(__name__)
 

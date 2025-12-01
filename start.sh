@@ -5,7 +5,7 @@
 
 # Start Celery worker in background with environment variable
 export CELERY_WORKER=true
-celery -A tasks worker --loglevel=info &
+celery -A celery_app.celery_app worker --loglevel=info --concurrency=1 &
 
 # Unset for web app
 unset CELERY_WORKER
